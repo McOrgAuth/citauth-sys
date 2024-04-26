@@ -48,4 +48,15 @@ public final class APIConnection {
             return false;
         }
     }
+
+    void disconnect() {
+        if(!this.socket.isClosed()) {
+            try {
+                this.socket.close();
+                System.out.println("disconnected correctly");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
