@@ -6,16 +6,17 @@ import java.sql.*;
 
 public class MySQLConnection {
     private String host;
+    private String db;
     private String user;
     private String password;
     private String port;
-    private String db;
     private boolean db_con_status = false;
     private Connection con;
 
-    MySQLConnection(String host, String user, String password, String port) {
+    MySQLConnection(String host, String db, String user, String password, String port) {
 
         this.host = host;
+        this.db = db;
         this.user = user;
         this.password = password;
         this.port = port;
@@ -30,7 +31,7 @@ public class MySQLConnection {
 
     public boolean connect() {
         try {
-            Class.forName("org.h2.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
             this.con = DriverManager.getConnection("jdbc:mysql://"+this.host+":"+this.port+"/"+this.db, this.user, this.password);
         } catch(ClassNotFoundException e) {
             e.printStackTrace();
