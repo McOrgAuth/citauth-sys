@@ -1,6 +1,7 @@
 package io.github.mam1zu.instruction;
 
 import io.github.mam1zu.connection.MySQLConnection;
+import io.github.mam1zu.instruction.instructionresult.InstructionResult;
 
 public class Instruction {
     String mcid;
@@ -8,7 +9,7 @@ public class Instruction {
         this.mcid = mcid;
     }
 
-    public boolean execute(MySQLConnection dbcon) {
-        return false;
+    public InstructionResult execute(MySQLConnection dbcon) {
+        return null;
     }
 }

@@ -1,6 +1,7 @@
 package io.github.mam1zu.connection;
 
 import io.github.mam1zu.instruction.*;
+import io.github.mam1zu.instruction.instructionresult.*;
 
 import java.io.*;
 import java.net.*;
@@ -66,6 +67,14 @@ public final class APIConnection extends AccessConnection {
         }
     }
 
+    public boolean checkCon() {
+        return this.socket != null;
+    }
+
+    public boolean checkStreams() {
+        return this.is != null && this.os != null;
+    }
+
     public Instruction getInstruction() throws IOException {
 
         if(this.socket == null)
@@ -119,6 +128,53 @@ public final class APIConnection extends AccessConnection {
         }
 
         this.os.write( ((result ? "true" : "false")+'\n').getBytes() );
+        return true;
+    }
+
+    public boolean returnResult(AuthenticationResult ar) throws IOException {
+        if(!(this.checkCon() && this.checkStreams()))
+            return false;
+
+        if(ar.getResult())
+            this.os.write(("AUTHENTICATION_SUCCESSED:"+ ar.getMcid() + '\n').getBytes());
+        else
+            this.os.write(("AUTHENTICATION_FAILED:"+ ar.getMcid() + '\n').getBytes());
+
+        return true;
+    }
+
+    public boolean returnResult(PreRegisterResult pr) throws IOException {
+        if(!(this.checkCon() && this.checkStreams()))
+            return false;
+
+        if(pr.getResult())
+            this.os.write(("PREREGISTER_SUCCESSED"+pr.getMcid()+'\n').getBytes());
+        else
+            this.os.write(("PREREGISTER_FAILED:"+pr.getMcid()+'\n').getBytes());
+        return true;
+    }
+
+    public boolean returnResult(RegisterResult rr) throws IOException {
+        if(!(this.checkCon() && this.checkStreams()))
+            return false;
+
+        if(rr.getResult())
+            this.os.write(("REGISTER_SUCCESSED"+rr.getMcid()+'\n').getBytes());
+        else
+            this.os.write(("REGISTER_FAILED"+rr.getMcid()+'\n').getBytes());
+
+        return true;
+    }
+
+    public boolean returnResult(RemoveResult rr) throws IOException {
+        if(!(this.checkCon() && this.checkStreams()))
+            return false;
+
+        if(rr.getResult())
+            this.os.write(("REMOVE_SUCCESSED"+rr.getMcid()+'\n').getBytes());
+        else
+            this.os.write(("REMOVE_FAILED"+rr.getMcid()+'\n').getBytes());
+
         return true;
     }
 }

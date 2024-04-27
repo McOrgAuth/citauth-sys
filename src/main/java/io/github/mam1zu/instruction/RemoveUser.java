@@ -1,6 +1,7 @@
 package io.github.mam1zu.instruction;
 
 import io.github.mam1zu.connection.MySQLConnection;
+import io.github.mam1zu.instruction.instructionresult.RemoveResult;
 
 public class RemoveUser extends Instruction {
     public RemoveUser(String mcid) {
@@ -8,7 +9,7 @@ public class RemoveUser extends Instruction {
     }
 
     @Override
-    public boolean execute(MySQLConnection dbcon) {
-        return false;
+    public RemoveResult execute(MySQLConnection dbcon) {
+        return null;
     }
 }

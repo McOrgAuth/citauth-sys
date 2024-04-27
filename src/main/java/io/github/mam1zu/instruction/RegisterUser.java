@@ -1,6 +1,7 @@
 package io.github.mam1zu.instruction;
 
 import io.github.mam1zu.connection.MySQLConnection;
+import io.github.mam1zu.instruction.instructionresult.RegisterResult;
 
 public class RegisterUser extends Instruction {
     public RegisterUser(String mcid) {
@@ -8,7 +9,7 @@ public class RegisterUser extends Instruction {
     }
 
     @Override
-    public boolean execute(MySQLConnection dbcon) {
-        return false;
+    public RegisterResult execute(MySQLConnection dbcon) {
+        return null;
     }
 }
