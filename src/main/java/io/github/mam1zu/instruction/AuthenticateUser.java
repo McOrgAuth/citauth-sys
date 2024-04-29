@@ -16,17 +16,19 @@ public class AuthenticateUser extends Instruction {
     public AuthenticateResult execute(MySQLConnection dbcon) {
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        if(!dbcon.checkCon())
-            dbcon.connect();
+        boolean result = false;
         try {
+            if(!dbcon.checkCon()) dbcon.connect();//important
             pstmt = dbcon.con.prepareStatement("SELECT MCID FROM REGISTERED_USER WHERE MCID = ?;");
             pstmt.setString(1, this.mcid);
             rs = pstmt.executeQuery();
+            result = rs.next();
+            rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
         }
         dbcon.disconnect();
-        return new AuthenticateResult(this.mcid, rs != null);
+        return new AuthenticateResult(this.mcid, result);
     }
 }

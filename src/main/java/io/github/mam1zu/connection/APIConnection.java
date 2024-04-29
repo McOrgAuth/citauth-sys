@@ -20,6 +20,34 @@ public final class APIConnection extends AccessConnection {
 
     @Override
     public boolean connect() {
+        try (ServerSocket ssocket = new ServerSocket(this.port)){
+
+            socket = ssocket.accept();
+            this.is = socket.getInputStream();
+            this.os = socket.getOutputStream();
+
+            StringBuilder res = new StringBuilder();
+            InputStreamReader isr = new InputStreamReader(this.is, StandardCharsets.UTF_8);
+            int data_tmp;
+            while((data_tmp = isr.read()) != '\n') {
+                System.out.println((char)data_tmp);
+                res.append((char)data_tmp);
+            }
+
+            if(res.toString().equals("HELLO_PROCESS_SERVER")) {
+                this.os.write("HELLO_API_SERVER\n".getBytes());
+                return true;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+
+    }
+
+    public boolean connect_legacy() {
         HttpURLConnection con = null;
         InetAddress serverIp;
 
@@ -68,7 +96,7 @@ public final class APIConnection extends AccessConnection {
     }
 
     public boolean checkCon() {
-        return this.socket != null;
+        return this.socket != null && !this.socket.isClosed();
     }
 
     public boolean checkStreams() {
@@ -91,14 +119,17 @@ public final class APIConnection extends AccessConnection {
         InputStreamReader isr = new InputStreamReader(this.is, StandardCharsets.UTF_8);
 
         int data_tmp;
+        int counter = 0;
         while((data_tmp = isr.read()) != '\n') {
-                inst_tmp.append((char)data_tmp);
+            System.out.println(counter++);
+            inst_tmp.append((char)data_tmp);
         }
 
         String inst = inst_tmp.toString();
         int index_mcidstarts = inst.indexOf(':')+1;
-        String mcid = inst.substring(index_mcidstarts, inst.length()-1);
+        String mcid = inst.substring(index_mcidstarts);
         System.out.println(mcid);
+        System.out.println(inst_tmp);
 
         if(inst.startsWith("AUTHENTICATEUSER:")) {
             return new AuthenticateUser(mcid);
@@ -111,6 +142,10 @@ public final class APIConnection extends AccessConnection {
         }
         else if(inst.startsWith("PREREGISTERUSER:")) {
             return new PreRegisterUser(mcid);
+        }
+        else if(inst.equals("GOODBYE_PROCESS_SERVER")) {
+            this.os.write("GOODBYE_API_SERVER\n".getBytes());
+            return new Goodbye(null);
         }
 
         return null;
@@ -135,10 +170,14 @@ public final class APIConnection extends AccessConnection {
         if(!(this.checkCon() && this.checkStreams()))
             return false;
 
-        if(ar.getResult())
-            this.os.write(("AUTHENTICATION_SUCCESSED:"+ ar.getMcid() + '\n').getBytes());
-        else
-            this.os.write(("AUTHENTICATION_FAILED:"+ ar.getMcid() + '\n').getBytes());
+        if(ar.getResult()) {
+            System.out.println("AUTHENTICATE_SUCCESSED:"+ ar.getMcid() + '\n');
+            this.os.write(("AUTHENTICATE_SUCCESSED:"+ ar.getMcid() + '\n').getBytes());
+        }
+        else {
+            System.out.println("AUTHENTICATE_FAILED:"+ ar.getMcid() + '\n');
+            this.os.write(("AUTHENTICATE_FAILED:"+ ar.getMcid() + '\n').getBytes());
+        }
 
         return true;
     }

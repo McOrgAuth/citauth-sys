@@ -3,6 +3,7 @@ package io.github.mam1zu;
 import io.github.mam1zu.connection.APIConnection;
 import io.github.mam1zu.connection.MySQLConnection;
 import io.github.mam1zu.instruction.AuthenticateUser;
+import io.github.mam1zu.instruction.Goodbye;
 import io.github.mam1zu.instruction.Instruction;
 import io.github.mam1zu.instruction.instructionresult.*;
 
@@ -17,23 +18,29 @@ public class Main {
         final Scanner scan = new Scanner(System.in);
         System.out.println("CITAUTH PROCESS-SYSTEM");
 
-        establishAPIConnection();
         checkMySQLConnection();
+        establishAPIConnection();
 
         while(true) {
-            processInstruction();
-            break;
+            if(!apicon.checkCon()) {
+                System.out.println("Socket is already closed, exit");
+                break;
+            }
+            else {
+                if(!processInstruction()) {
+                    System.out.println("API server has said goodbye to process server.");
+                    System.out.println("Disconnecting connections...");
+                    disconnectAllConnections();
+                    System.out.println("Done. Goodbye!");
+                    break;
+                }
+            }
         }
-
-
-
-        apicon.disconnect();
-        dbcon.disconnect();
-
+        disconnectAllConnections();
     }
 
     static void establishAPIConnection() {
-        System.out.println("Establishing connection to api server...");
+        System.out.println("Waiting connection from API server...");
         apicon = new APIConnection("172.24.241.112", 37565);
         if(!apicon.connect()) {
             System.out.println("Connection to API failed");
@@ -53,9 +60,17 @@ public class Main {
         System.out.println("Connection to DB successed!");
     }
 
+    static void disconnectAllConnections() {
+        apicon.disconnect();
+        dbcon.disconnect();
+    }
+
     static boolean processInstruction() {
         try {
             Instruction inst = apicon.getInstruction();
+            if(inst instanceof Goodbye) {
+                return false;
+            }
             InstructionResult instr = inst.execute(dbcon);
             if(instr instanceof AuthenticateResult) {
                 apicon.returnResult((AuthenticateResult) instr);
@@ -77,7 +92,7 @@ public class Main {
         } catch (IOException e){
             e.printStackTrace();
         }
-        return false;
+        return true;
     }
 
 }

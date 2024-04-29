@@ -2,6 +2,7 @@ package io.github.mam1zu.connection;
 
 import io.github.mam1zu.connection.AccessConnection;
 
+import java.io.IOException;
 import java.sql.*;
 
 
@@ -78,7 +79,12 @@ public final class MySQLConnection extends AccessConnection {
     }
 
     public boolean checkCon() {
-        return this.con != null;
+        try {
+            return !this.con.isClosed();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean userAuth(String mcid) {
