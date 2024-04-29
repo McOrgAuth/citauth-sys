@@ -2,7 +2,9 @@ package io.github.mam1zu;
 
 import io.github.mam1zu.connection.APIConnection;
 import io.github.mam1zu.connection.MySQLConnection;
+import io.github.mam1zu.instruction.AuthenticateUser;
 import io.github.mam1zu.instruction.Instruction;
+import io.github.mam1zu.instruction.instructionresult.*;
 
 import java.io.IOException;
 import java.util.Scanner;
@@ -19,15 +21,7 @@ public class Main {
         checkMySQLConnection();
 
         while(true) {
-            Instruction inst = null;
-            try {
-                inst = apicon.getInstruction();
-                apicon.returnResult(inst.execute(dbcon));
-            } catch (IOException e) {
-                e.printStackTrace();
-                continue;
-            }
-
+            processInstruction();
             break;
         }
 
@@ -58,4 +52,32 @@ public class Main {
         }
         System.out.println("Connection to DB successed!");
     }
+
+    static boolean processInstruction() {
+        try {
+            Instruction inst = apicon.getInstruction();
+            InstructionResult instr = inst.execute(dbcon);
+            if(instr instanceof AuthenticateResult) {
+                apicon.returnResult((AuthenticateResult) instr);
+                return true;
+            }
+            else if(instr instanceof PreRegisterResult) {
+                apicon.returnResult((PreRegisterResult) instr);
+                return true;
+            }
+            else if(instr instanceof RegisterResult) {
+                apicon.returnResult((RegisterResult) instr);
+                return true;
+
+            }
+            else if(instr instanceof RemoveResult) {
+                apicon.returnResult((RemoveResult) instr);
+                return true;
+            }
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 }

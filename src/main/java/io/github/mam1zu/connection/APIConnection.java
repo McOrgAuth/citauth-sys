@@ -131,7 +131,7 @@ public final class APIConnection extends AccessConnection {
         return true;
     }
 
-    public boolean returnResult(AuthenticationResult ar) throws IOException {
+    public boolean returnResult(AuthenticateResult ar) throws IOException {
         if(!(this.checkCon() && this.checkStreams()))
             return false;
 

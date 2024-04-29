@@ -1,7 +1,7 @@
 package io.github.mam1zu.instruction;
 
 import io.github.mam1zu.connection.MySQLConnection;
-import io.github.mam1zu.instruction.instructionresult.InstructionResult;
+import io.github.mam1zu.instruction.instructionresult.AuthenticateResult;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,7 +13,7 @@ public class AuthenticateUser extends Instruction {
     }
 
     @Override
-    public InstructionResult execute(MySQLConnection dbcon) {
+    public AuthenticateResult execute(MySQLConnection dbcon) {
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         if(!dbcon.checkCon())
@@ -27,6 +27,6 @@ public class AuthenticateUser extends Instruction {
             return null;
         }
         dbcon.disconnect();
-        return new InstructionResult(this.mcid, rs != null);
+        return new AuthenticateResult(this.mcid, rs != null);
     }
 }
