@@ -2,21 +2,16 @@ package io.github.mam1zu;
 
 import io.github.mam1zu.connection.APIConnection;
 import io.github.mam1zu.connection.MySQLConnection;
-import io.github.mam1zu.instruction.AuthenticateUser;
 import io.github.mam1zu.instruction.Goodbye;
 import io.github.mam1zu.instruction.Instruction;
 import io.github.mam1zu.instruction.instructionresult.*;
 
 import java.io.IOException;
-import java.util.Scanner;
 
 public class Main {
-    static APIConnection apicon = null;
-    static MySQLConnection dbcon = null;
     public static void main(String[] args) {
 
-        final Scanner scan = new Scanner(System.in);
-        System.out.println("CITAUTH PROCESS-SYSTEM");
+        System.out.println("CITAUTH-PROCESS-SYSTEM");
 
         checkMySQLConnection();
         establishAPIConnection();
@@ -39,6 +34,9 @@ public class Main {
         disconnectAllConnections();
     }
 
+    static APIConnection apicon = null;
+    static MySQLConnection dbcon = null;
+
     static void establishAPIConnection() {
         System.out.println("Waiting connection from API server...");
         apicon = new APIConnection("172.24.241.112", 37565);
@@ -51,7 +49,7 @@ public class Main {
 
     static void checkMySQLConnection() {
         System.out.println("Checking connection to database server...");
-        dbcon = new MySQLConnection("localhost", "citauth","root", "kouki1230", "3306");
+        dbcon = new MySQLConnection("localhost", "citauth","root", "", "3306");
         if(!dbcon.connect()) {
             System.out.println("Connection to DB failed");
             apicon.disconnect();

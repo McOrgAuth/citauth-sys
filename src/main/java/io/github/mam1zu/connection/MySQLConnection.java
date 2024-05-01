@@ -1,8 +1,5 @@
 package io.github.mam1zu.connection;
 
-import io.github.mam1zu.connection.AccessConnection;
-
-import java.io.IOException;
 import java.sql.*;
 
 

@@ -26,9 +26,9 @@ public class AuthenticateUser extends Instruction {
             rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
+        } finally {
+            dbcon.disconnect();
         }
-        dbcon.disconnect();
         return new AuthenticateResult(this.mcid, result);
     }
 }

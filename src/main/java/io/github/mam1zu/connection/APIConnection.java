@@ -30,7 +30,6 @@ public final class APIConnection extends AccessConnection {
             InputStreamReader isr = new InputStreamReader(this.is, StandardCharsets.UTF_8);
             int data_tmp;
             while((data_tmp = isr.read()) != '\n') {
-                System.out.println((char)data_tmp);
                 res.append((char)data_tmp);
             }
 
@@ -119,17 +118,13 @@ public final class APIConnection extends AccessConnection {
         InputStreamReader isr = new InputStreamReader(this.is, StandardCharsets.UTF_8);
 
         int data_tmp;
-        int counter = 0;
         while((data_tmp = isr.read()) != '\n') {
-            System.out.println(counter++);
             inst_tmp.append((char)data_tmp);
         }
 
         String inst = inst_tmp.toString();
         int index_mcidstarts = inst.indexOf(':')+1;
         String mcid = inst.substring(index_mcidstarts);
-        System.out.println(mcid);
-        System.out.println(inst_tmp);
 
         if(inst.startsWith("AUTHENTICATEUSER:")) {
             return new AuthenticateUser(mcid);
@@ -171,8 +166,8 @@ public final class APIConnection extends AccessConnection {
             return false;
 
         if(ar.getResult()) {
-            System.out.println("AUTHENTICATE_SUCCESSED:"+ ar.getMcid() + '\n');
-            this.os.write(("AUTHENTICATE_SUCCESSED:"+ ar.getMcid() + '\n').getBytes());
+            System.out.println("AUTHENTICATE_SUCCEEDED:"+ ar.getMcid() + '\n');
+            this.os.write(("AUTHENTICATE_SUCCEEDED:"+ ar.getMcid() + '\n').getBytes());
         }
         else {
             System.out.println("AUTHENTICATE_FAILED:"+ ar.getMcid() + '\n');
