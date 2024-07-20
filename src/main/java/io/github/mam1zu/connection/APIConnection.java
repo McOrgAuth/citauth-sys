@@ -33,8 +33,8 @@ public final class APIConnection extends AccessConnection {
                 res.append((char)data_tmp);
             }
 
-            if(res.toString().equals("HELLO_PROCESS_SERVER")) {
-                this.os.write("HELLO_API_SERVER\n".getBytes());
+            if(res.toString().equals("HELLO_CITAUTH_SYS")) {
+                this.os.write("HELLO_CITAUTH_API\n".getBytes());
                 return true;
             }
 
@@ -138,8 +138,8 @@ public final class APIConnection extends AccessConnection {
         else if(inst.startsWith("PREREGISTERUSER:")) {
             return new PreRegisterUser(mcid);
         }
-        else if(inst.equals("GOODBYE_PROCESS_SERVER")) {
-            this.os.write("GOODBYE_API_SERVER\n".getBytes());
+        else if(inst.equals("BYE_CITAUTH_SYS")) {
+            this.os.write("BYE_CITAUTH_API\n".getBytes());
             return new Goodbye(null);
         }
 
