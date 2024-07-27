@@ -64,7 +64,7 @@ public final class APIConnection extends AccessConnection {
             this.os = socket.getOutputStream();
             this.is = socket.getInputStream();
 
-            this.os.write("HELLO_API_SERVER\n".getBytes());
+            this.os.write("HELLO_CITAUTH_API\n".getBytes());
 
             StringBuilder res = new StringBuilder();
 
@@ -74,7 +74,7 @@ public final class APIConnection extends AccessConnection {
                 res.append((char)data_tmp);
             }
 
-            return res.toString().equals("HELLO_PROCESS_SERVER");
+            return res.toString().equals("HELLO_CITAUTH_SYS");
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -126,16 +126,16 @@ public final class APIConnection extends AccessConnection {
         int index_mcidstarts = inst.indexOf(':')+1;
         String mcid = inst.substring(index_mcidstarts);
 
-        if(inst.startsWith("AUTHENTICATEUSER:")) {
+        if(inst.startsWith("AUTH:")) {
             return new AuthenticateUser(mcid);
         }
-        else if(inst.startsWith("REGISTERUSER:")) {
+        else if(inst.startsWith("RGST:")) {
             return new RegisterUser(mcid);
         }
-        else if(inst.startsWith("REMOVEUSER:")) {
+        else if(inst.startsWith("DELT:")) {
             return new RemoveUser(mcid);
         }
-        else if(inst.startsWith("PREREGISTERUSER:")) {
+        else if(inst.startsWith("PRRG:")) {
             return new PreRegisterUser(mcid);
         }
         else if(inst.equals("BYE_CITAUTH_SYS")) {
@@ -166,12 +166,12 @@ public final class APIConnection extends AccessConnection {
             return false;
 
         if(ar.getResult()) {
-            System.out.println("AUTHENTICATE_SUCCEEDED:"+ ar.getMcid() + '\n');
-            this.os.write(("AUTHENTICATE_SUCCEEDED:"+ ar.getMcid() + '\n').getBytes());
+            System.out.println("AUTH_SUCCESS:"+ ar.getMcid() + '\n');
+            this.os.write(("AUTH_SUCCESS:"+ ar.getMcid() + '\n').getBytes());
         }
         else {
-            System.out.println("AUTHENTICATE_FAILED:"+ ar.getMcid() + '\n');
-            this.os.write(("AUTHENTICATE_FAILED:"+ ar.getMcid() + '\n').getBytes());
+            System.out.println("AUTH_FAIL:"+ ar.getMcid() + '\n');
+            this.os.write(("AUTH_FAIL:"+ ar.getMcid() + '\n').getBytes());
         }
 
         return true;
@@ -182,9 +182,9 @@ public final class APIConnection extends AccessConnection {
             return false;
 
         if(pr.getResult())
-            this.os.write(("PREREGISTER_SUCCESSED"+pr.getMcid()+'\n').getBytes());
+            this.os.write(("PRRG_SUCCESS:"+pr.getMcid()+'\n').getBytes());
         else
-            this.os.write(("PREREGISTER_FAILED:"+pr.getMcid()+'\n').getBytes());
+            this.os.write(("PRRG_FAIL:"+pr.getMcid()+'\n').getBytes());
         return true;
     }
 
@@ -193,9 +193,9 @@ public final class APIConnection extends AccessConnection {
             return false;
 
         if(rr.getResult())
-            this.os.write(("REGISTER_SUCCESSED"+rr.getMcid()+'\n').getBytes());
+            this.os.write(("RGST_SUCCESS:"+rr.getMcid()+'\n').getBytes());
         else
-            this.os.write(("REGISTER_FAILED"+rr.getMcid()+'\n').getBytes());
+            this.os.write(("RGST_FAIL:"+rr.getMcid()+'\n').getBytes());
 
         return true;
     }
@@ -205,9 +205,9 @@ public final class APIConnection extends AccessConnection {
             return false;
 
         if(rr.getResult())
-            this.os.write(("REMOVE_SUCCESSED"+rr.getMcid()+'\n').getBytes());
+            this.os.write(("DELT_SUCCESS:"+rr.getMcid()+'\n').getBytes());
         else
-            this.os.write(("REMOVE_FAILED"+rr.getMcid()+'\n').getBytes());
+            this.os.write(("DELT_FAIL:"+rr.getMcid()+'\n').getBytes());
 
         return true;
     }
