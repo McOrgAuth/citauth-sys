@@ -4,8 +4,8 @@ import io.github.mam1zu.connection.MySQLConnection;
 import io.github.mam1zu.instruction.instructionresult.PreRegisterResult;
 
 public class PreRegisterUser extends Instruction {
-    public PreRegisterUser(String mcid) {
-        super(mcid);
+    public PreRegisterUser(String uuid) {
+        super(uuid);
     }
 
     @Override

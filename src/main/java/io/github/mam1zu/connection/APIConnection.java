@@ -166,12 +166,12 @@ public final class APIConnection extends AccessConnection {
             return false;
 
         if(ar.getResult()) {
-            System.out.println("AUTH_SUCCESS:"+ ar.getMcid() + '\n');
-            this.os.write(("AUTH_SUCCESS:"+ ar.getMcid() + '\n').getBytes());
+            System.out.println("AUTH_SUCCESS:"+ ar.getUUID() + '\n');
+            this.os.write(("AUTH_SUCCESS:"+ ar.getUUID() + '\n').getBytes());
         }
         else {
-            System.out.println("AUTH_FAIL:"+ ar.getMcid() + '\n');
-            this.os.write(("AUTH_FAIL:"+ ar.getMcid() + '\n').getBytes());
+            System.out.println("AUTH_FAIL:"+ ar.getUUID() + '\n');
+            this.os.write(("AUTH_FAIL:"+ ar.getUUID() + '\n').getBytes());
         }
 
         return true;
@@ -182,9 +182,9 @@ public final class APIConnection extends AccessConnection {
             return false;
 
         if(pr.getResult())
-            this.os.write(("PRRG_SUCCESS:"+pr.getMcid()+'\n').getBytes());
+            this.os.write(("PRRG_SUCCESS:"+pr.getUUID()+'\n').getBytes());
         else
-            this.os.write(("PRRG_FAIL:"+pr.getMcid()+'\n').getBytes());
+            this.os.write(("PRRG_FAIL:"+pr.getUUID()+'\n').getBytes());
         return true;
     }
 
@@ -193,9 +193,9 @@ public final class APIConnection extends AccessConnection {
             return false;
 
         if(rr.getResult())
-            this.os.write(("RGST_SUCCESS:"+rr.getMcid()+'\n').getBytes());
+            this.os.write(("RGST_SUCCESS:"+rr.getUUID()+'\n').getBytes());
         else
-            this.os.write(("RGST_FAIL:"+rr.getMcid()+'\n').getBytes());
+            this.os.write(("RGST_FAIL:"+rr.getUUID()+'\n').getBytes());
 
         return true;
     }
@@ -205,9 +205,9 @@ public final class APIConnection extends AccessConnection {
             return false;
 
         if(rr.getResult())
-            this.os.write(("DELT_SUCCESS:"+rr.getMcid()+'\n').getBytes());
+            this.os.write(("DELT_SUCCESS:"+rr.getUUID()+'\n').getBytes());
         else
-            this.os.write(("DELT_FAIL:"+rr.getMcid()+'\n').getBytes());
+            this.os.write(("DELT_FAIL:"+rr.getUUID()+'\n').getBytes());
 
         return true;
     }

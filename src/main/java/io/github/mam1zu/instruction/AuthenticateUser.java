@@ -8,8 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class AuthenticateUser extends Instruction {
-    public AuthenticateUser(String mcid) {
-        super(mcid);
+    public AuthenticateUser(String uuid) {
+        super(uuid);
     }
 
     @Override
@@ -19,8 +19,8 @@ public class AuthenticateUser extends Instruction {
         boolean result = false;
         try {
             if(!dbcon.checkCon()) dbcon.connect();//important
-            pstmt = dbcon.con.prepareStatement("SELECT MCID FROM REGISTERED_USER WHERE MCID = ?;");
-            pstmt.setString(1, this.mcid);
+            pstmt = dbcon.con.prepareStatement("SELECT UUID FROM REGISTERED_USER WHERE UUID = ?;");
+            pstmt.setString(1, this.uuid);
             rs = pstmt.executeQuery();
             result = rs.next();
             rs.close();
@@ -29,6 +29,6 @@ public class AuthenticateUser extends Instruction {
         } finally {
             dbcon.disconnect();
         }
-        return new AuthenticateResult(this.mcid, result);
+        return new AuthenticateResult(this.uuid, result);
     }
 }

@@ -4,9 +4,9 @@ import io.github.mam1zu.connection.MySQLConnection;
 import io.github.mam1zu.instruction.instructionresult.InstructionResult;
 
 public class Instruction {
-    String mcid;
-    Instruction (String mcid) {
-        this.mcid = mcid;
+    String uuid;
+    Instruction (String uuid) {
+        this.uuid = uuid;
     }
 
     public InstructionResult execute(MySQLConnection dbcon) {

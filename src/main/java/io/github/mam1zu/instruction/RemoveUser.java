@@ -8,8 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class RemoveUser extends Instruction {
-    public RemoveUser(String mcid) {
-        super(mcid);
+    public RemoveUser(String uuid) {
+        super(uuid);
     }
 
     @Override
@@ -19,8 +19,8 @@ public class RemoveUser extends Instruction {
         try {
             if(!dbcon.checkCon())
                 dbcon.connect();
-            pstmt = dbcon.con.prepareStatement("DELETE FROM REGISTERED_USER WHERE MCID = ?;");
-            pstmt.setString(1, this.mcid);
+            pstmt = dbcon.con.prepareStatement("DELETE FROM REGISTERED_USER WHERE UUID = ?;");
+            pstmt.setString(1, this.uuid);
             result = pstmt.executeUpdate() == 1;
         } catch(SQLException e) {
             e.printStackTrace();
@@ -28,6 +28,6 @@ public class RemoveUser extends Instruction {
         } finally {
             dbcon.disconnect();
         }
-        return new RemoveResult(this.mcid, result);
+        return new RemoveResult(this.uuid, result);
     }
 }

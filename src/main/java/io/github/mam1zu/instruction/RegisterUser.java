@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class RegisterUser extends Instruction {
-    public RegisterUser(String mcid) {
-        super(mcid);
+    public RegisterUser(String uuid) {
+        super(uuid);
     }
 
     @Override
@@ -24,15 +24,15 @@ public class RegisterUser extends Instruction {
 
         try {
             if(dbcon.checkCon()) dbcon.connect();
-            checkdup_pstmt = dbcon.con.prepareStatement("SELECT MCID FROM REGISTERED_USER WHERE MCID = ?;");
-            checkdup_pstmt.setString(1, this.mcid);
+            checkdup_pstmt = dbcon.con.prepareStatement("SELECT UUID FROM REGISTERED_USER WHERE UUID = ?;");
+            checkdup_pstmt.setString(1, this.uuid);
             checkdup_rs = checkdup_pstmt.executeQuery();
             if(!checkdup_rs.next()) {
                 LocalDateTime current = LocalDateTime.now();
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 String dbformat_now = current.format(formatter);
                 register_pstmt = dbcon.con.prepareStatement("INSERT INTO REGISTERED_USER VALUES(?, ?);");
-                register_pstmt.setString(1, this.mcid);
+                register_pstmt.setString(1, this.uuid);
                 register_pstmt.setString(2, dbformat_now);
                 result = register_pstmt.executeUpdate() == 1;
                 //TODO: there must be implemented a feature to delete a pre-register information
@@ -47,6 +47,6 @@ public class RegisterUser extends Instruction {
         } finally {
             dbcon.disconnect();
         }
-        return new RegisterResult(this.mcid, result);
+        return new RegisterResult(this.uuid, result);
     }
 }
