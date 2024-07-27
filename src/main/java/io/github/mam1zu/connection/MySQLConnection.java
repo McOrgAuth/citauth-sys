@@ -56,17 +56,23 @@ public final class MySQLConnection extends AccessConnection {
     public void init() {
         this.connect();
         try {
-            PreparedStatement pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS PRE_REGISTERED_USER (" +
-                    "MCID varchar(40),"+
-                    "AUTH_UUID varchar(40),"+
-                    "PRE_REGISTERED_AT TIMESTAMP"+
+            PreparedStatement pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS PREREGISTERED_TABLE (" +
+                    "EMAIL TEXT NOT NULL"+
+                    "UUID TEXT NOT NULL"+
+                    "expire_at TIMESTAMP NOT NULL"+
                     ");");
             pstmt.execute();
-            pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS REGISTERED_USER (" +
-                    "MCID varchar(40),"+
-                    "REGISTERED_AT TIMESTAMP"+
+            pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS EMAIL_TABLE(" +
+                    "EMAIL TEXT NOT NULL,"+
+                    "registered_at TIMESTAMP NOT NULL"+
+                    "updated_at TIMESTAMP NOT NULL"+
                     ");");
             pstmt.execute();
+            pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS UUID_TABLE(" +
+                    "EMAIL TEXT NOT NULL"+
+                    "UUID TEXT NOT NULL"+
+                    ")"
+            );
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {

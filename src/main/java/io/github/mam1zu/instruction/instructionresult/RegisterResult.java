@@ -1,8 +1,14 @@
 package io.github.mam1zu.instruction.instructionresult;
 
 public class RegisterResult extends InstructionResult {
-    public RegisterResult(String uuid, boolean result) {
+    private String email;
+    public RegisterResult(String uuid, String email, boolean result) {
         super(uuid, result);
+        this.email = email;
+    }
+
+    public String getEmail() {
+        return this.email;
     }
 
 }

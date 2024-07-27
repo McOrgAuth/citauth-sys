@@ -123,20 +123,30 @@ public final class APIConnection extends AccessConnection {
         }
 
         String inst = inst_tmp.toString();
-        int index_mcidstarts = inst.indexOf(':')+1;
-        String mcid = inst.substring(index_mcidstarts);
+
+        //get email address if exists
+        String email = null;
+        if(inst.contains("|")) {
+            int index_emailstarts = inst.indexOf('|')+1;
+            email = inst.substring(index_emailstarts);
+        }
+
+        //get uuid
+        int index_uuidstarts = inst.indexOf(':')+1;
+        String uuid = inst.substring(index_uuidstarts, index_uuidstarts+31);//UUID length is basically 32
+
 
         if(inst.startsWith("AUTH:")) {
-            return new AuthenticateUser(mcid);
+            return new AuthenticateUser(uuid);
         }
         else if(inst.startsWith("RGST:")) {
-            return new RegisterUser(mcid);
+            return new RegisterUser(uuid, email);
         }
         else if(inst.startsWith("DELT:")) {
-            return new RemoveUser(mcid);
+            return new RemoveUser(uuid, email);
         }
         else if(inst.startsWith("PRRG:")) {
-            return new PreRegisterUser(mcid);
+            return new PreRegisterUser(uuid, email);
         }
         else if(inst.equals("BYE_CITAUTH_SYS")) {
             this.os.write("BYE_CITAUTH_API\n".getBytes());
@@ -167,7 +177,7 @@ public final class APIConnection extends AccessConnection {
 
         if(ar.getResult()) {
             System.out.println("AUTH_SUCCESS:"+ ar.getUUID() + '\n');
-            this.os.write(("AUTH_SUCCESS:"+ ar.getUUID() + '\n').getBytes());
+            this.os.write(("AUTH_SUCCESS:"+ ar.getUUID() +'\n').getBytes());
         }
         else {
             System.out.println("AUTH_FAIL:"+ ar.getUUID() + '\n');
@@ -182,9 +192,9 @@ public final class APIConnection extends AccessConnection {
             return false;
 
         if(pr.getResult())
-            this.os.write(("PRRG_SUCCESS:"+pr.getUUID()+'\n').getBytes());
+            this.os.write(("PRRG_SUCCESS:"+pr.getUUID()+'|'+pr.getEmail()+'\n').getBytes());
         else
-            this.os.write(("PRRG_FAIL:"+pr.getUUID()+'\n').getBytes());
+            this.os.write(("PRRG_FAIL:"+pr.getUUID()+'|'+pr.getEmail()+'\n').getBytes());
         return true;
     }
 

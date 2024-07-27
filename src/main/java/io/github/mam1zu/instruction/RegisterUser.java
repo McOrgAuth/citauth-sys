@@ -10,8 +10,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class RegisterUser extends Instruction {
-    public RegisterUser(String uuid) {
+    String email = null;
+    public RegisterUser(String uuid, String email) {
         super(uuid);
+        this.email = email;
     }
 
     @Override
@@ -47,6 +49,6 @@ public class RegisterUser extends Instruction {
         } finally {
             dbcon.disconnect();
         }
-        return new RegisterResult(this.uuid, result);
+        return new RegisterResult(this.uuid, this.email, result);
     }
 }
