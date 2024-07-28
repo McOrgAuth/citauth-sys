@@ -5,13 +5,17 @@ import io.github.mam1zu.connection.MySQLConnection;
 import io.github.mam1zu.instruction.Goodbye;
 import io.github.mam1zu.instruction.Instruction;
 import io.github.mam1zu.instruction.instructionresult.*;
+import io.github.mam1zu.utils.Config;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
 
         System.out.println("CITAUTH-PROCESS-SYSTEM");
+
+        loadConfig();
 
         checkMySQLConnection();
         establishAPIConnection();
@@ -36,6 +40,8 @@ public class Main {
 
     static APIConnection apicon = null;
     static MySQLConnection dbcon = null;
+    static Config config = null;
+    static HashMap<String, String> mysqlconfig = null;
 
     static void establishAPIConnection() {
         System.out.println("Waiting connection from API server...");
@@ -49,7 +55,7 @@ public class Main {
 
     static void checkMySQLConnection() {
         System.out.println("Checking connection to database server...");
-        dbcon = new MySQLConnection("localhost", "citauth","root", "", "3306");
+        dbcon = new MySQLConnection(mysqlconfig.get("host"), mysqlconfig.get("db"),mysqlconfig.get("user"), mysqlconfig.get("password"), mysqlconfig.get("port"));
         if(!dbcon.connect()) {
             System.out.println("Connection to DB failed");
             apicon.disconnect();
@@ -91,6 +97,12 @@ public class Main {
             e.printStackTrace();
         }
         return true;
+    }
+
+    static void loadConfig() {
+        config = new Config();
+        config.loadConfig();
+        mysqlconfig = config.getMysqlConfig();
     }
 
 }

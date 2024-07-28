@@ -57,19 +57,19 @@ public final class MySQLConnection extends AccessConnection {
         this.connect();
         try {
             PreparedStatement pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS PREREGISTERED_TABLE (" +
-                    "EMAIL TEXT NOT NULL"+
-                    "UUID TEXT NOT NULL"+
+                    "EMAIL TEXT NOT NULL,"+
+                    "UUID TEXT NOT NULL,"+
                     "expire_at TIMESTAMP NOT NULL"+
                     ");");
             pstmt.execute();
             pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS EMAIL_TABLE(" +
                     "EMAIL TEXT NOT NULL,"+
-                    "registered_at TIMESTAMP NOT NULL"+
+                    "registered_at TIMESTAMP NOT NULL,"+
                     "updated_at TIMESTAMP NOT NULL"+
                     ");");
             pstmt.execute();
             pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS UUID_TABLE(" +
-                    "EMAIL TEXT NOT NULL"+
+                    "EMAIL TEXT NOT NULL,"+
                     "UUID TEXT NOT NULL"+
                     ")"
             );

@@ -124,6 +124,13 @@ public final class APIConnection extends AccessConnection {
 
         String inst = inst_tmp.toString();
 
+        //only bye is processed to avoid latter string process
+        if(inst.equals("BYE_CITAUTH_SYS")) {
+            this.os.write("BYE_CITAUTH_API\n".getBytes());
+            return new Goodbye(null);
+        }
+
+
         //get email address if exists
         String email = null;
         if(inst.contains("|")) {
@@ -147,10 +154,6 @@ public final class APIConnection extends AccessConnection {
         }
         else if(inst.startsWith("PRRG:")) {
             return new PreRegisterUser(uuid, email);
-        }
-        else if(inst.equals("BYE_CITAUTH_SYS")) {
-            this.os.write("BYE_CITAUTH_API\n".getBytes());
-            return new Goodbye(null);
         }
 
         return null;
