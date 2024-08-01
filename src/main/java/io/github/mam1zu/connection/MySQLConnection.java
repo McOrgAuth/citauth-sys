@@ -71,6 +71,7 @@ public final class MySQLConnection extends AccessConnection {
             pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS UUID_TABLE(" +
                     "EMAIL TEXT NOT NULL,"+
                     "UUID TEXT NOT NULL"+
+                    ""
                     ")"
             );
             pstmt.execute();
@@ -109,7 +110,35 @@ public final class MySQLConnection extends AccessConnection {
         return ret;
     }
 
-    public boolean registerUser() {
+    public boolean registerUser(String uuid, String email) {
+        boolean ret = false;
+        try {
+            if(this.con.isClosed()) {
+                this.connect();
+            }
+            //check duplication
+            PreparedStatement pstmt_dupcheck = this.con.prepareStatement("SELECT UUID, EMAIL FROM UUID_TABLE WHERE UUID = ? AND EMAIL = ?");
+            ResultSet rs_dupcheck;
+            pstmt_dupcheck.setString(1, uuid);
+            pstmt_dupcheck.setString(2, email);
+            rs_dupcheck = pstmt_dupcheck.executeQuery();
+            if(rs_dupcheck.getString(1).equalsIgnoreCase(uuid) || rs_dupcheck.getString(2).equalsIgnoreCase(email)) {
+                return false;
+            }
+
+            //register
+            PreparedStatement pstmt_register = this.con.prepareStatement("INSERT INTO UUID_TABLE VALUES (?, ?)");
+            pstmt_register.setString(1, uuid);
+            pstmt_register.setString(2, email);
+            ret = pstmt_register.executeUpdate() == 1;
+
+            return ret;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            this.disconnect();
+        }
         return false;
     }
 
