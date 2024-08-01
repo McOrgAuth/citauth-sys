@@ -73,6 +73,7 @@ public final class MySQLConnection extends AccessConnection {
                     "UUID TEXT NOT NULL"+
                     ")"
             );
+            pstmt.execute();
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
@@ -90,14 +91,14 @@ public final class MySQLConnection extends AccessConnection {
         }
     }
 
-    public boolean userAuth(String mcid) {
+    public boolean authenticateUser(String uuid) {
         boolean ret = false;
         try {
             if(this.con.isClosed()) {
                 this.connect();
             }
-            PreparedStatement pstmt = this.con.prepareStatement("SELECT MCID FROM REGISTERED_USER WHERE ID = ?");
-            pstmt.setString(1, mcid);//To prevent from SQL-Injection
+            PreparedStatement pstmt = this.con.prepareStatement("SELECT UUID FROM UUID_TABLE WHERE UUID = ?");
+            pstmt.setString(1, uuid);//To prevent from SQL-Injection
             ResultSet rs = pstmt.executeQuery();
             ret = rs.getString(1) != null;
         } catch (SQLException e) {
@@ -108,7 +109,7 @@ public final class MySQLConnection extends AccessConnection {
         return ret;
     }
 
-    public final boolean registerUser() {
+    public boolean registerUser() {
         return false;
     }
 
