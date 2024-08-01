@@ -18,37 +18,8 @@ public class RegisterUser extends Instruction {
 
     @Override
     public RegisterResult execute(MySQLConnection dbcon) {
-
-        PreparedStatement checkdup_pstmt;
-        PreparedStatement register_pstmt;
-        ResultSet checkdup_rs;
-        boolean result = false;
-
-        try {
-            if(dbcon.checkCon()) dbcon.connect();
-            checkdup_pstmt = dbcon.con.prepareStatement("SELECT UUID FROM UUID_TABLE WHERE UUID = ?;");
-            checkdup_pstmt.setString(1, this.uuid);
-            checkdup_rs = checkdup_pstmt.executeQuery();
-            if(!checkdup_rs.next()) {
-                LocalDateTime current = LocalDateTime.now();
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                String dbformat_now = current.format(formatter);
-                register_pstmt = dbcon.con.prepareStatement("INSERT INTO UUID_TABLE VALUES(?, ?);");
-                register_pstmt.setString(1, this.uuid);
-                register_pstmt.setString(2, dbformat_now);
-                result = register_pstmt.executeUpdate() == 1;
-                //TODO: there must be implemented a feature to delete a pre-register information
-            }
-            else {
-                //User this.mcid is already registered
-                //do nothing at the moment
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            dbcon.disconnect();
-        }
+        boolean result;
+        result = dbcon.registerUser(uuid, email);
         return new RegisterResult(this.uuid, this.email, result);
     }
 }
