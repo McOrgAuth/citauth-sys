@@ -147,7 +147,7 @@ public final class APIConnection extends AccessConnection {
             return new AuthenticateUser(uuid);
         }
         else if(inst.startsWith("RGST:")) {
-            return new RegisterUser(uuid, email);
+            return new DeleteUser(uuid, email);
         }
         else if(inst.startsWith("DELT:")) {
             return new RemoveUser(uuid, email);
