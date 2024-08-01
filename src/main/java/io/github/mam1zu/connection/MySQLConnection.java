@@ -71,7 +71,6 @@ public final class MySQLConnection extends AccessConnection {
             pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS UUID_TABLE(" +
                     "EMAIL TEXT NOT NULL,"+
                     "UUID TEXT NOT NULL"+
-                    ""
                     ")"
             );
             pstmt.execute();
