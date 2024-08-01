@@ -115,13 +115,8 @@ public final class MySQLConnection extends AccessConnection {
             if(this.con.isClosed()) {
                 this.connect();
             }
-            //check duplication
-            PreparedStatement pstmt_dupcheck = this.con.prepareStatement("SELECT UUID, EMAIL FROM UUID_TABLE WHERE UUID = ? AND EMAIL = ?");
-            ResultSet rs_dupcheck;
-            pstmt_dupcheck.setString(1, uuid);
-            pstmt_dupcheck.setString(2, email);
-            rs_dupcheck = pstmt_dupcheck.executeQuery();
-            if(rs_dupcheck.getString(1).equalsIgnoreCase(uuid) || rs_dupcheck.getString(2).equalsIgnoreCase(email)) {
+
+            if(isDuplicated(uuid, email)) {
                 return false;
             }
 
@@ -145,8 +140,19 @@ public final class MySQLConnection extends AccessConnection {
         return false;
     }
 
-    public final boolean removeUser() {
+    public boolean removeUser(String uuid, String email) {
+
         return false;
+
+    }
+
+    public boolean isDuplicated(String uuid, String email) throws SQLException {
+        PreparedStatement pstmt_dupcheck = this.con.prepareStatement("SELECT UUID, EMAIL FROM UUID_TABLE WHERE UUID = ? AND EMAIL = ?");
+        ResultSet rs_dupcheck;
+        pstmt_dupcheck.setString(1, uuid);
+        pstmt_dupcheck.setString(2, email);
+        rs_dupcheck = pstmt_dupcheck.executeQuery();
+        return rs_dupcheck.getString(1).equalsIgnoreCase(uuid) || rs_dupcheck.getString(2).equalsIgnoreCase(email);
     }
 
 }
