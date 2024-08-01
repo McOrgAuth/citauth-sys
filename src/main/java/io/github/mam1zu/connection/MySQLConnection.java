@@ -116,7 +116,7 @@ public final class MySQLConnection extends AccessConnection {
                 this.connect();
             }
 
-            if(isDuplicated(uuid, email)) {
+            if(checkExistance(uuid, email)) {
                 return false;
             }
 
@@ -136,17 +136,37 @@ public final class MySQLConnection extends AccessConnection {
         return false;
     }
 
-    public final boolean preRegisterUser() {
+    public boolean preRegisterUser() {
         return false;
     }
 
-    public boolean removeUser(String uuid, String email) {
+    public boolean deleteUser(String uuid, String email) {
+        boolean ret = false;
+        try {
+            if(this.con.isClosed()) {
+                this.connect();
+            }
 
-        return false;
+            if(!checkExistance(uuid, email)) {
+                return false;
+            }
+
+            PreparedStatement pstmt = this.con.prepareStatement("DELETE FROM UUID_TABLE WHERE UUID = ? AND EMAIL = ?");
+            pstmt.setString(1, uuid);
+            pstmt.setString(2, email);
+            ret = pstmt.executeUpdate() == 1;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            this.disconnect();
+        }
+
+        return ret;
 
     }
 
-    public boolean isDuplicated(String uuid, String email) throws SQLException {
+    public boolean checkExistance(String uuid, String email) throws SQLException {
         PreparedStatement pstmt_dupcheck = this.con.prepareStatement("SELECT UUID, EMAIL FROM UUID_TABLE WHERE UUID = ? AND EMAIL = ?");
         ResultSet rs_dupcheck;
         pstmt_dupcheck.setString(1, uuid);
