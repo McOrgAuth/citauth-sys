@@ -13,7 +13,7 @@ public class PreRegisterUser extends Instruction {
     @Override
     public PreRegisterResult execute(MySQLConnection dbcon) {
         boolean result;
-        result = dbcon.preRegisterUser();
+        result = dbcon.preRegisterUser(uuid, email);
         return new PreRegisterResult(uuid, email, result);
     }
 }
