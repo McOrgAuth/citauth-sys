@@ -1,6 +1,8 @@
 package io.github.mam1zu.connection;
 
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 public final class MySQLConnection extends AccessConnection {
@@ -62,17 +64,12 @@ public final class MySQLConnection extends AccessConnection {
                     "expire_at TIMESTAMP NOT NULL"+
                     ");");
             pstmt.execute();
-            pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS EMAIL_TABLE(" +
+            pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS REGISTERED_USER (" +
                     "EMAIL TEXT NOT NULL,"+
+                    "UUID TEXT NOT NULL,"+
                     "registered_at TIMESTAMP NOT NULL,"+
                     "updated_at TIMESTAMP NOT NULL"+
                     ");");
-            pstmt.execute();
-            pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS UUID_TABLE(" +
-                    "EMAIL TEXT NOT NULL,"+
-                    "UUID TEXT NOT NULL"+
-                    ")"
-            );
             pstmt.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -97,7 +94,7 @@ public final class MySQLConnection extends AccessConnection {
             if(this.con.isClosed()) {
                 this.connect();
             }
-            PreparedStatement pstmt = this.con.prepareStatement("SELECT UUID FROM UUID_TABLE WHERE UUID = ?");
+            PreparedStatement pstmt = this.con.prepareStatement("SELECT UUID FROM REGISTERED_USER WHERE UUID = ?");
             pstmt.setString(1, uuid);//To prevent from SQL-Injection
             ResultSet rs = pstmt.executeQuery();
             ret = rs.getString(1) != null;
@@ -121,9 +118,14 @@ public final class MySQLConnection extends AccessConnection {
             }
 
             //register
-            PreparedStatement pstmt_register = this.con.prepareStatement("INSERT INTO UUID_TABLE VALUES (?, ?)");
+            PreparedStatement pstmt_register = this.con.prepareStatement("INSERT INTO REGISTERED_USER VALUES (?, ?, ?, ?)");
             pstmt_register.setString(1, uuid);
             pstmt_register.setString(2, email);
+            LocalDateTime now = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String now_formatted = now.format(formatter);
+            pstmt_register.setString(3, now_formatted);
+            pstmt_register.setString(4, now_formatted);
             ret = pstmt_register.executeUpdate() == 1;
 
             return ret;
@@ -151,7 +153,7 @@ public final class MySQLConnection extends AccessConnection {
                 return false;
             }
 
-            PreparedStatement pstmt = this.con.prepareStatement("DELETE FROM UUID_TABLE WHERE UUID = ? AND EMAIL = ?");
+            PreparedStatement pstmt = this.con.prepareStatement("DELETE FROM REGISTERED_USER WHERE UUID = ? AND EMAIL = ?");
             pstmt.setString(1, uuid);
             pstmt.setString(2, email);
             ret = pstmt.executeUpdate() == 1;
@@ -167,7 +169,7 @@ public final class MySQLConnection extends AccessConnection {
     }
 
     public boolean checkExistance(String uuid, String email) throws SQLException {
-        PreparedStatement pstmt_dupcheck = this.con.prepareStatement("SELECT UUID, EMAIL FROM UUID_TABLE WHERE UUID = ? AND EMAIL = ?");
+        PreparedStatement pstmt_dupcheck = this.con.prepareStatement("SELECT UUID, EMAIL FROM REGISTERED_USER WHERE UUID = ? AND EMAIL = ?");
         ResultSet rs_dupcheck;
         pstmt_dupcheck.setString(1, uuid);
         pstmt_dupcheck.setString(2, email);
