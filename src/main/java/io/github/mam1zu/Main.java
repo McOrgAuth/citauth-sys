@@ -91,8 +91,8 @@ public class Main {
                 return true;
 
             }
-            else if(instr instanceof RemoveResult) {
-                apicon.returnResult((RemoveResult) instr);
+            else if(instr instanceof DeleteResult) {
+                apicon.returnResult((DeleteResult) instr);
                 return true;
             }
         } catch (IOException e){

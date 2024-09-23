@@ -167,7 +167,7 @@ public final class APIConnection extends AccessConnection {
         return true;
     }
 
-    public boolean returnResult(RemoveResult rr) throws IOException {
+    public boolean returnResult(DeleteResult rr) throws IOException {
         if(!(this.checkCon() && this.checkStreams()))
             return false;
 

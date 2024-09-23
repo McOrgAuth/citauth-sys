@@ -1,8 +1,8 @@
 package io.github.mam1zu.instruction.instructionresult;
 
-public class RemoveResult extends InstructionResult {
+public class DeleteResult extends InstructionResult {
     private String email;
-    public RemoveResult(String uuid, String email, boolean result) {
+    public DeleteResult(String uuid, String email, boolean result) {
         super(uuid, result);
         this.email = email;
     }
