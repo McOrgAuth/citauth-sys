@@ -4,12 +4,18 @@ import io.github.mam1zu.instruction.PreRegisterUser;
 
 public class PreRegisterResult extends InstructionResult {
     private String email;
-    public PreRegisterResult(String uuid, String email, boolean result) {
+    private String preregid;
+    public PreRegisterResult(String uuid, String email, boolean result, String preregid) {
         super(uuid, result);
         this.email = email;
+        this.preregid = preregid;
     }
 
     public String getEmail() {
         return this.email;
+    }
+
+    public String getPreregid() {
+        return this.preregid;
     }
 }

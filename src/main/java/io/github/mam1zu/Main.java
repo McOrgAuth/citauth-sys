@@ -13,6 +13,8 @@ import java.util.HashMap;
 public class Main {
     public static void main(String[] args) {
 
+        final boolean debug = true;
+
         System.out.println("CITAUTH-PROCESS-SYSTEM");
 
         loadConfig();

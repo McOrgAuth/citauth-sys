@@ -46,42 +46,6 @@ public final class APIConnection extends AccessConnection {
 
     }
 
-    public boolean connect_legacy() {
-        HttpURLConnection con = null;
-        InetAddress serverIp;
-
-        try {
-            serverIp = InetAddress.getByName(ipAddr);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        try {
-
-            socket = new Socket(serverIp, port);
-
-            this.os = socket.getOutputStream();
-            this.is = socket.getInputStream();
-
-            this.os.write("HELLO_CITAUTH_API\n".getBytes());
-
-            StringBuilder res = new StringBuilder();
-
-            InputStreamReader isr = new InputStreamReader(this.is, StandardCharsets.UTF_8);
-            int data_tmp;
-            while((data_tmp = isr.read()) != '\n') {
-                res.append((char)data_tmp);
-            }
-
-            return res.toString().equals("HELLO_CITAUTH_SYS");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     @Override
     public void disconnect() {
         if(!this.socket.isClosed()) {
@@ -104,6 +68,8 @@ public final class APIConnection extends AccessConnection {
 
     public Instruction getInstruction() throws IOException {
 
+        int invalid_char_counter = 0;
+
         if(this.socket == null)
             return null;
         if(this.is == null) {
@@ -119,6 +85,7 @@ public final class APIConnection extends AccessConnection {
 
         int data_tmp;
         while((data_tmp = isr.read()) != '\n') {
+            if(data_tmp == '\0') resetApiConnection();
             inst_tmp.append((char)data_tmp);
         }
 
@@ -140,14 +107,16 @@ public final class APIConnection extends AccessConnection {
 
         //get uuid
         int index_uuidstarts = inst.indexOf(':')+1;
-        String uuid = inst.substring(index_uuidstarts, index_uuidstarts+31);//UUID length is basically 32
-
+        String uuid = inst.substring(index_uuidstarts, index_uuidstarts+32);//UUID length is basically 32
 
         if(inst.startsWith("AUTH:")) {
             return new AuthenticateUser(uuid);
         }
         else if(inst.startsWith("RGST:")) {
-            return new RegisterUser(uuid, email);
+            //get pre-registration id
+            int index_preregidstarts = inst.indexOf('#')+1;
+            String preregid = inst.substring(index_preregidstarts, index_preregidstarts+32);
+            return new RegisterUser(uuid, email, preregid);
         }
         else if(inst.startsWith("DELT:")) {
             return new DeleteUser(uuid, email);
@@ -159,31 +128,16 @@ public final class APIConnection extends AccessConnection {
         return null;
     }
 
-    public boolean returnResult(boolean result) throws IOException {
-        if(this.socket == null)
-            return false;
-        if(this.is == null) {
-            this.is = socket.getInputStream();
-        }
-
-        if(this.os == null) {
-            this.os = socket.getOutputStream();
-        }
-
-        this.os.write( ((result ? "true" : "false")+'\n').getBytes() );
-        return true;
-    }
-
     public boolean returnResult(AuthenticateResult ar) throws IOException {
         if(!(this.checkCon() && this.checkStreams()))
             return false;
 
         if(ar.getResult()) {
-            System.out.println("AUTH_SUCCESS:"+ ar.getUUID() + '\n');
+            System.out.println("AUTH_SUCCESS:"+ ar.getUUID());
             this.os.write(("AUTH_SUCCESS:"+ ar.getUUID() +'\n').getBytes());
         }
         else {
-            System.out.println("AUTH_FAIL:"+ ar.getUUID() + '\n');
+            System.out.println("AUTH_FAIL:"+ ar.getUUID());
             this.os.write(("AUTH_FAIL:"+ ar.getUUID() + '\n').getBytes());
         }
 
@@ -206,9 +160,9 @@ public final class APIConnection extends AccessConnection {
             return false;
 
         if(rr.getResult())
-            this.os.write(("RGST_SUCCESS:"+rr.getUUID()+'\n').getBytes());
+            this.os.write(("RGST_SUCCESS:"+rr.getUUID()+ '|' + rr.getEmail() + '\n').getBytes());
         else
-            this.os.write(("RGST_FAIL:"+rr.getUUID()+'\n').getBytes());
+            this.os.write(("RGST_FAIL:"+rr.getUUID()+ '|' + rr.getEmail() + '\n').getBytes());
 
         return true;
     }
@@ -223,5 +177,9 @@ public final class APIConnection extends AccessConnection {
             this.os.write(("DELT_FAIL:"+rr.getUUID()+'\n').getBytes());
 
         return true;
+    }
+
+    void resetApiConnection() {
+        System.out.println("CITAUTH-API seems down");
     }
 }

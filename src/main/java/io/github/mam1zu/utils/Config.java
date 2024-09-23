@@ -7,7 +7,8 @@ import java.util.HashMap;
 import java.util.Properties;
 
 public class Config {
-    private static final String CONFIG_PATH = "src/main/java/io/github/mam1zu/config/config.properties";
+    //private static final String CONFIG_PATH = "src/main/java/io/github/mam1zu/config/config.properties";
+    private static final String CONFIG_PATH = "./config/config.properties";
     Properties prop;
 
     //MySQL configs
@@ -33,7 +34,6 @@ public class Config {
             e.printStackTrace();
             return;
         } catch (Exception e) {
-            System.out.println("You what");
             e.printStackTrace();
             return;
         }

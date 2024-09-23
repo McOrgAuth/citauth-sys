@@ -58,7 +58,7 @@ public final class MySQLConnection extends AccessConnection {
     public void init() {
         this.connect();
         try {
-            PreparedStatement pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS PREREGISTERED_TABLE (" +
+            PreparedStatement pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS PREREGISTERED_USER (" +
                     "EMAIL TEXT NOT NULL,"+
                     "UUID TEXT NOT NULL,"+
                     "registered_at TIMESTAMP NOT NULL,"+
@@ -98,7 +98,7 @@ public final class MySQLConnection extends AccessConnection {
             PreparedStatement pstmt = this.con.prepareStatement("SELECT UUID FROM REGISTERED_USER WHERE UUID = ?");
             pstmt.setString(1, uuid);//To prevent from SQL-Injection
             ResultSet rs = pstmt.executeQuery();
-            ret = rs.getString(1) != null;
+            ret = rs.isBeforeFirst();
             rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -108,7 +108,7 @@ public final class MySQLConnection extends AccessConnection {
         return ret;
     }
 
-    public boolean registerUser(String uuid, String email) {
+    public boolean registerUser(String uuid, String email, String preregid) {
         boolean ret = false;
         try {
             if(this.con.isClosed()) {
@@ -120,12 +120,13 @@ public final class MySQLConnection extends AccessConnection {
             }
 
             //check pre-register information
-            PreparedStatement pstmt_chkpre = this.con.prepareStatement("SELECT UUID, EMAIL FROM PREREGISTERED_USER WHERE UUID = ? AND EMAIL = ?");
+            PreparedStatement pstmt_chkpre = this.con.prepareStatement("SELECT UUID, EMAIL FROM PREREGISTERED_USER WHERE EMAIL = ? AND UUID = ? AND PREREGID = ?");
             ResultSet rs;
-            pstmt_chkpre.setString(1, uuid);
-            pstmt_chkpre.setString(2, email);
+            pstmt_chkpre.setString(1, email);
+            pstmt_chkpre.setString(2, uuid);
+            pstmt_chkpre.setString(3, preregid);
             rs = pstmt_chkpre.executeQuery();
-            if(!rs.getString(1).equalsIgnoreCase(uuid) || !rs.getString(2).equalsIgnoreCase(email)) {
+            if(!rs.isBeforeFirst()) {
                 //pre-register information not found
                 return false;
             }
@@ -134,8 +135,8 @@ public final class MySQLConnection extends AccessConnection {
 
             //register
             PreparedStatement pstmt_register = this.con.prepareStatement("INSERT INTO REGISTERED_USER VALUES (?, ?, ?, ?)");
-            pstmt_register.setString(1, uuid);
-            pstmt_register.setString(2, email);
+            pstmt_register.setString(1, email);
+            pstmt_register.setString(2, uuid);
             LocalDateTime now = LocalDateTime.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             String now_formatted = now.format(formatter);
@@ -145,9 +146,9 @@ public final class MySQLConnection extends AccessConnection {
 
             //delete preregistration information if registration succeeded
             if(ret) {
-                PreparedStatement pstmt_delpre = this.con.prepareStatement("DELETE FROM PREREGISTERED_USER WHERE UUID = ? AND EMAIL = ?");
-                pstmt_delpre.setString(1, uuid);
-                pstmt_delpre.setString(2, email);
+                PreparedStatement pstmt_delpre = this.con.prepareStatement("DELETE FROM PREREGISTERED_USER WHERE EMAIL = ? AND UUID = ?");
+                pstmt_delpre.setString(1, email);
+                pstmt_delpre.setString(2, uuid);
                 if(pstmt_delpre.executeUpdate() != 1) {
                     System.err.println("A registration succeeded, but deleting pre-register information failed.");
                     System.err.println("UUID:"+uuid+", email:"+email);
@@ -164,7 +165,7 @@ public final class MySQLConnection extends AccessConnection {
         return false;
     }
 
-    public boolean preRegisterUser(String uuid, String email) {
+    public boolean preRegisterUser(String uuid, String email, String preregid) {
         boolean ret = false;
 
         try {
@@ -178,18 +179,19 @@ public final class MySQLConnection extends AccessConnection {
             pstmt_chkdup.setString(1, uuid);
             pstmt_chkdup.setString(2, email);
             rs = pstmt_chkdup.executeQuery();
-            if(rs.getString(1).equalsIgnoreCase(uuid) || rs.getString(2).equalsIgnoreCase(email)) {
+            if(rs.isBeforeFirst()) {
                 rs.close();
                 return false;
             }
 
-            PreparedStatement pstmt_prereg = this.con.prepareStatement("INSERT INTO PREREGISTERED_USER VALUES(?, ?, ?, ?)");
+            PreparedStatement pstmt_prereg = this.con.prepareStatement("INSERT INTO PREREGISTERED_USER VALUES(?, ?, ?, ?, ?)");
             pstmt_prereg.setString(1, uuid);
             pstmt_prereg.setString(2, email);
+            pstmt_prereg.setString(3, preregid);
 
             LocalDateTime now = LocalDateTime.now();
-            LocalDateTime expire = now.plusMinutes(30);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime expire = now.plusMinutes(30);//expire time
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
             String now_formatted = now.format(formatter);
             String expire_formatted = expire.format(formatter);
             pstmt_prereg.setString(3, now_formatted);
@@ -236,7 +238,7 @@ public final class MySQLConnection extends AccessConnection {
         pstmt_dupcheck.setString(1, uuid);
         pstmt_dupcheck.setString(2, email);
         rs_dupcheck = pstmt_dupcheck.executeQuery();
-        return rs_dupcheck.getString(1).equalsIgnoreCase(uuid) || rs_dupcheck.getString(2).equalsIgnoreCase(email);
+        return rs_dupcheck.isBeforeFirst();
     }
 
 }
