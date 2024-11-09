@@ -2,8 +2,9 @@ package io.github.mam1zu.instruction.instructionresult;
 
 public class InstructionResult {
     private String uuid;
-    private boolean result;
-    public InstructionResult(String uuid, boolean result) {
+    private int result;
+
+    public InstructionResult(String uuid, int result) {
         this.uuid = uuid;
         this.result = result;
     }
@@ -12,7 +13,8 @@ public class InstructionResult {
         return this.uuid;
     }
 
-    public boolean getResult() {
+    public int getResult() {
         return this.result;
     }
+
 }

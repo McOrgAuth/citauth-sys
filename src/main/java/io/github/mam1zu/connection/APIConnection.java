@@ -7,6 +7,8 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 
+import org.json.JSONObject;
+
 public final class APIConnection extends AccessConnection {
     private Socket socket = null;
     private OutputStream os = null;
@@ -26,17 +28,31 @@ public final class APIConnection extends AccessConnection {
             this.is = socket.getInputStream();
             this.os = socket.getOutputStream();
 
-            StringBuilder res = new StringBuilder();
+            StringBuilder req = new StringBuilder();
             InputStreamReader isr = new InputStreamReader(this.is, StandardCharsets.UTF_8);
             int data_tmp;
-            while((data_tmp = isr.read()) != '\n') {
-                res.append((char)data_tmp);
+            while(true) {
+                data_tmp = isr.read();
+                req.append((char)data_tmp);
+                if(data_tmp == '}') break;
+            }
+            System.out.println(req);
+            JSONObject req_json = new JSONObject(req.toString());
+
+            if(req_json.getString("hello").equals("ping")) {
+                System.out.println("true?");
+                JSONObject res_json = new JSONObject();
+                res_json.append("hello","pong");
+                this.os.write(res_json.toString().getBytes());
+                return true;
             }
 
-            if(res.toString().equals("HELLO_CITAUTH_SYS")) {
+            /*
+            if(req.toString().equals("HELLO_CITAUTH_SYS")) {
                 this.os.write("HELLO_CITAUTH_API\n".getBytes());
                 return true;
             }
+            */
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -67,6 +83,65 @@ public final class APIConnection extends AccessConnection {
     }
 
     public Instruction getInstruction() throws IOException {
+
+        if(this.socket == null) {
+            return null;
+        }
+        if(this.is == null) {
+            this.is = socket.getInputStream();
+        }
+        if(this.os == null) {
+            this.os = socket.getOutputStream();
+        }
+
+        StringBuilder inst_tmp = new StringBuilder();
+        InputStreamReader isr = new InputStreamReader(this.is, StandardCharsets.UTF_8);
+
+        int data_tmp;
+        while(true) {
+            data_tmp = isr.read();
+            if(data_tmp == '\0') resetApiConnection();
+            inst_tmp.append((char)data_tmp);
+            if(data_tmp == '}') break;
+        }
+
+        String inst = inst_tmp.toString();
+
+        JSONObject inst_json = new JSONObject(inst);
+
+        if(!inst_json.isNull("bye")) {
+            JSONObject res_json = new JSONObject();
+            res_json.put("bye", "pong");
+
+            this.os.write(res_json.toString().getBytes());
+            return new Goodbye(null);
+        }
+
+        if(inst_json.getString("method").equals("PRRG")) {
+            String email = inst_json.getString("email");
+            String uuid = inst_json.getString("uuid");
+            return new PreRegisterUser(uuid, email);
+        }
+        else if(inst_json.getString("method").equals("AUTH")) {
+            String uuid = inst_json.getString("uuid");
+            return new AuthenticateUser(uuid);
+        }
+        else if(inst_json.getString("method").equals("RGST")) {
+            String preregid = inst_json.getString("preregid");
+            return new RegisterUser(null, null, preregid);
+        }
+        else if(inst_json.getString("method").equals("DELT")) {
+            String uuid = inst_json.getString("uuid");
+            String email = inst_json.getString("email");
+            return new DeleteUser(uuid, email);
+        }
+
+        return null;
+
+
+    }
+
+    public Instruction getInstruction_old() throws IOException {
 
         int invalid_char_counter = 0;
 
@@ -129,53 +204,76 @@ public final class APIConnection extends AccessConnection {
     }
 
     public boolean returnResult(AuthenticateResult ar) throws IOException {
+
         if(!(this.checkCon() && this.checkStreams()))
             return false;
-
-        if(ar.getResult()) {
+        
+        if(ar.getResult() == 1) {
             System.out.println("AUTH_SUCCESS:"+ ar.getUUID());
-            this.os.write(("AUTH_SUCCESS:"+ ar.getUUID() +'\n').getBytes());
         }
         else {
             System.out.println("AUTH_FAIL:"+ ar.getUUID());
-            this.os.write(("AUTH_FAIL:"+ ar.getUUID() + '\n').getBytes());
         }
 
+        JSONObject res_json = new JSONObject();
+        res_json.put("method", "AUTH");
+        res_json.put("uuid", ar.getUUID());
+        res_json.put("status", ar.getResult());
+        this.os.write(res_json.toString().getBytes());
+
         return true;
+
     }
 
     public boolean returnResult(PreRegisterResult pr) throws IOException {
+
         if(!(this.checkCon() && this.checkStreams()))
             return false;
 
-        if(pr.getResult())
-            this.os.write(("PRRG_SUCCESS:"+pr.getUUID()+'|'+pr.getEmail()+'\n').getBytes());
-        else
-            this.os.write(("PRRG_FAIL:"+pr.getUUID()+'|'+pr.getEmail()+'\n').getBytes());
+        if(pr.getResult() == 1) {
+            System.out.println("PREREGISTER_SUCCESS:"+ pr.getUUID());
+        }
+        else {
+            System.out.println("PREREGISTER_FAIL:"+ pr.getUUID());
+        }
+        JSONObject res_json = new JSONObject();
+
+        res_json.put("method", "PRRG");
+        res_json.put("email", pr.getEmail());
+        res_json.put("uuid", pr.getUUID());
+        res_json.put("status", pr.getResult());
+        if(pr.getResult() == 1) res_json.put("preregid", pr.getPreregid());
+
+        this.os.write(res_json.toString().getBytes());
+
         return true;
     }
 
     public boolean returnResult(RegisterResult rr) throws IOException {
+
         if(!(this.checkCon() && this.checkStreams()))
             return false;
 
-        if(rr.getResult())
-            this.os.write(("RGST_SUCCESS:"+rr.getUUID()+ '|' + rr.getEmail() + '\n').getBytes());
-        else
-            this.os.write(("RGST_FAIL:"+rr.getUUID()+ '|' + rr.getEmail() + '\n').getBytes());
+        JSONObject res_json = new JSONObject();
+        res_json.put("method", "RGST");
+        res_json.put("preregid", rr.getPreregid());
+        res_json.put("status", rr.getResult());
+        this.os.write(res_json.toString().getBytes());
 
         return true;
     }
 
-    public boolean returnResult(DeleteResult rr) throws IOException {
+    public boolean returnResult(DeleteResult dr) throws IOException {
         if(!(this.checkCon() && this.checkStreams()))
             return false;
-
-        if(rr.getResult())
-            this.os.write(("DELT_SUCCESS:"+rr.getUUID()+'\n').getBytes());
-        else
-            this.os.write(("DELT_FAIL:"+rr.getUUID()+'\n').getBytes());
-
+        
+        JSONObject res_json = new JSONObject();
+        res_json.put("method", "DELT");
+        res_json.put("email", dr.getEmail());
+        res_json.put("uuid", dr.getUUID());
+        res_json.put("status", dr.getResult());
+        this.os.write(res_json.toString().getBytes());
+        
         return true;
     }
 

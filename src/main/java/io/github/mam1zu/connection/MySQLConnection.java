@@ -4,6 +4,16 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping;
+
+import io.github.mam1zu.PreRegisteredUserData;
+import io.github.mam1zu.UserData;
+
+/**
+ * データベース操作処理を実装するためのクラス
+ * @author mamizu
+ */
+
 
 public final class MySQLConnection extends AccessConnection {
     private String host;
@@ -12,6 +22,15 @@ public final class MySQLConnection extends AccessConnection {
     private String password;
     private String port;
     public Connection con;
+
+    /**
+     * MySQLへのコネクションを作成します。
+     * @param host MySQLデータベースのホスト名。
+     * @param db MySQLデータベースのデータベース名。
+     * @param user MySQLデータベースに接続する際に使用するユーザ名。
+     * @param password MySQLデータベースに接続する際に使用するパスワード。
+     * @param port MySQLデータベースが待ち受けているポート番号。
+     */
 
     public MySQLConnection(String host, String db, String user, String password, String port) {
 
@@ -29,6 +48,11 @@ public final class MySQLConnection extends AccessConnection {
         init();
     }
 
+
+    /**
+     * MySQLデータベースへ接続します。
+     * @return データベースへのアクセス状況。
+     */
     @Override
     public boolean connect() {
         try {
@@ -43,6 +67,10 @@ public final class MySQLConnection extends AccessConnection {
         }
         return this.con != null;
     }
+    
+    /**
+     * MySQLデータベースから切断します。
+     */
 
     @Override
     public void disconnect() {
@@ -55,12 +83,18 @@ public final class MySQLConnection extends AccessConnection {
         }
     }
 
+    /**
+     * データベースを初期化処理を行います。
+     * テーブルが存在しなければ作成し、存在する場合は何もしません。
+     */
+
     public void init() {
         this.connect();
         try {
             PreparedStatement pstmt = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS PREREGISTERED_USER (" +
                     "EMAIL TEXT NOT NULL,"+
                     "UUID TEXT NOT NULL,"+
+                    "PREREG_ID TEXT NOT NULL,"+
                     "registered_at TIMESTAMP NOT NULL,"+
                     "expire_at TIMESTAMP NOT NULL"+
                     ");");
@@ -79,6 +113,11 @@ public final class MySQLConnection extends AccessConnection {
         }
 
     }
+    
+    /**
+     * データベースへのコネクションの状況を返します。
+     * @return データベースへのコネクションの状況。
+     */
 
     public boolean checkCon() {
         try {
@@ -89,8 +128,14 @@ public final class MySQLConnection extends AccessConnection {
         }
     }
 
-    public boolean authenticateUser(String uuid) {
-        boolean ret = false;
+    /**
+     * ユーザがシステムに登録されているかどうかを確認します。
+     * @param uuid 認証したいユーザのuuid。
+     * @return 認証結果。認証が成功すれば1、失敗すれば-1。
+     */
+
+    public int authenticateUser(String uuid) {
+        int ret = -1;
         try {
             if(this.con.isClosed()) {
                 this.connect();
@@ -98,106 +143,13 @@ public final class MySQLConnection extends AccessConnection {
             PreparedStatement pstmt = this.con.prepareStatement("SELECT UUID FROM REGISTERED_USER WHERE UUID = ?");
             pstmt.setString(1, uuid);//To prevent from SQL-Injection
             ResultSet rs = pstmt.executeQuery();
-            ret = rs.isBeforeFirst();
-            rs.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            this.disconnect();
-        }
-        return ret;
-    }
-
-    public boolean registerUser(String uuid, String email, String preregid) {
-        boolean ret = false;
-        try {
-            if(this.con.isClosed()) {
-                this.connect();
-            }
-
-            if(checkExistance(uuid, email)) {
-                return false;
-            }
-
-            //check pre-register information
-            PreparedStatement pstmt_chkpre = this.con.prepareStatement("SELECT UUID, EMAIL FROM PREREGISTERED_USER WHERE EMAIL = ? AND UUID = ? AND PREREGID = ?");
-            ResultSet rs;
-            pstmt_chkpre.setString(1, email);
-            pstmt_chkpre.setString(2, uuid);
-            pstmt_chkpre.setString(3, preregid);
-            rs = pstmt_chkpre.executeQuery();
             if(!rs.isBeforeFirst()) {
-                //pre-register information not found
-                return false;
+                ret = -1;
+            }
+            else {
+                ret = 1;
             }
             rs.close();
-
-
-            //register
-            PreparedStatement pstmt_register = this.con.prepareStatement("INSERT INTO REGISTERED_USER VALUES (?, ?, ?, ?)");
-            pstmt_register.setString(1, email);
-            pstmt_register.setString(2, uuid);
-            LocalDateTime now = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String now_formatted = now.format(formatter);
-            pstmt_register.setString(3, now_formatted);
-            pstmt_register.setString(4, now_formatted);
-            ret = pstmt_register.executeUpdate() == 1;
-
-            //delete preregistration information if registration succeeded
-            if(ret) {
-                PreparedStatement pstmt_delpre = this.con.prepareStatement("DELETE FROM PREREGISTERED_USER WHERE EMAIL = ? AND UUID = ?");
-                pstmt_delpre.setString(1, email);
-                pstmt_delpre.setString(2, uuid);
-                if(pstmt_delpre.executeUpdate() != 1) {
-                    System.err.println("A registration succeeded, but deleting pre-register information failed.");
-                    System.err.println("UUID:"+uuid+", email:"+email);
-                }
-            }
-
-            return ret;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            this.disconnect();
-        }
-        return false;
-    }
-
-    public boolean preRegisterUser(String uuid, String email, String preregid) {
-        boolean ret = false;
-
-        try {
-            if(this.con.isClosed()) {
-                this.connect();
-            }
-
-            //preregister dup check
-            PreparedStatement pstmt_chkdup = this.con.prepareStatement("SELECT UUID, EMAIL FROM PREREGISTERED_USER WHERE UUID = ? AND EMAIL = ?");
-            ResultSet rs;
-            pstmt_chkdup.setString(1, uuid);
-            pstmt_chkdup.setString(2, email);
-            rs = pstmt_chkdup.executeQuery();
-            if(rs.isBeforeFirst()) {
-                rs.close();
-                return false;
-            }
-
-            PreparedStatement pstmt_prereg = this.con.prepareStatement("INSERT INTO PREREGISTERED_USER VALUES(?, ?, ?, ?, ?)");
-            pstmt_prereg.setString(1, uuid);
-            pstmt_prereg.setString(2, email);
-            pstmt_prereg.setString(3, preregid);
-
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime expire = now.plusMinutes(30);//expire time
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-            String now_formatted = now.format(formatter);
-            String expire_formatted = expire.format(formatter);
-            pstmt_prereg.setString(3, now_formatted);
-            pstmt_prereg.setString(4, expire_formatted);
-            ret = pstmt_prereg.executeUpdate() == 1;
-
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
@@ -205,34 +157,177 @@ public final class MySQLConnection extends AccessConnection {
         }
         return ret;
     }
+    
+    /**
+     * 仮登録されたユーザの本登録を行います。
+     * @param uuid 本登録するユーザのuuidです。
+     * @param email 本登録するユーザーのメールアドレスです。
+     * @param preregid 仮登録の際に発行された仮登録IDです。
+     * @return 本登録結果。1:成功。-1:失敗。すでに本登録されている。-2:失敗。仮登録情報が存在しなかった。-3:失敗。仮登録の期限切れ。-100:失敗。例外エラーが発生した場合はこの値を返すこと。
+     * 
+     */
 
-    public boolean deleteUser(String uuid, String email) {
-        boolean ret = false;
-        try {
-            if(this.con.isClosed()) {
-                this.connect();
-            }
+    public int registerUser(String uuid, String email, String preregid) throws SQLException {
 
-            if(!checkExistance(uuid, email)) {
-                return false;
-            }
-
-            PreparedStatement pstmt = this.con.prepareStatement("DELETE FROM REGISTERED_USER WHERE UUID = ? AND EMAIL = ?");
-            pstmt.setString(1, uuid);
-            pstmt.setString(2, email);
-            ret = pstmt.executeUpdate() == 1;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            this.disconnect();
+        int ret = 0;
+        
+        if(this.con.isClosed()) {
+            this.connect();
         }
 
+        PreRegisteredUserData pre_user = getPreregisteredUser(preregid);
+
+        if(pre_user == null) {
+            return -2;
+        }
+        
+        uuid = pre_user.getUUID();
+        email = pre_user.getEmail();
+
+        if(isRegistered(uuid, email)) {
+            return -1;
+        }
+
+        if(!isPreRegistered(uuid, email)) {
+            return -2;
+        }
+
+        if(!isPreRegisterValid(preregid)) {
+            return -3;
+        }
+
+        //TODO: 仮登録の期限確認機能実装
+
+        System.out.println(uuid + ":" + email);
+
+        PreparedStatement pstmt_register = this.con.prepareStatement("INSERT INTO REGISTERED_USER VALUES (?, ?, ?, ?)");
+        pstmt_register.setString(1, email);
+        pstmt_register.setString(2, uuid);
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String now_formatted = now.format(formatter);
+        pstmt_register.setString(3, now_formatted);
+        pstmt_register.setString(4, now_formatted);
+
+         //delete preregistration information if registration succeeded
+
+        if(pstmt_register.executeUpdate() == 1) {
+            PreparedStatement pstmt_delpre = this.con.prepareStatement("DELETE FROM PREREGISTERED_USER WHERE EMAIL = ? AND UUID = ?");
+            pstmt_delpre.setString(1, email);
+            pstmt_delpre.setString(2, uuid);
+            if(pstmt_delpre.executeUpdate() != 1) {
+                System.err.println("A registration succeeded, but deleting pre-register information failed.");
+                System.err.println("UUID:"+uuid+", email:"+email);
+            }
+            ret = 1;
+        }
+        
+        this.disconnect();
         return ret;
 
     }
 
-    public boolean checkExistance(String uuid, String email) throws SQLException {
+    /**
+     * ユーザの仮登録を行います。
+     * @param uuid 登録するユーザーのuuidです。
+     * @param email 登録するユーザーのメールアドレスです。
+     * @param preregid 仮登録IDです。
+     * @return 1: 成功。-1:この値は返さない。-2:失敗。仮登録に失敗した。-3:失敗。すでに本登録されている。-100:失敗。例外エラーにより失敗した場合はこの値を返すこと。
+     * @throws SQLException
+     */
+
+    public int preRegisterUser(String uuid, String email, String preregid) throws SQLException {
+        int ret = 0;
+        if(this.con.isClosed()) {
+            this.connect();
+        }
+
+        //register dup check... doesn't delete it here, delete registration data if you'd like to re-register
+        if(isRegistered(uuid, email)) {
+            return -3;
+        }
+
+        //preregister dup check... delete it here.
+        if(isPreRegistered(uuid, email)) {
+            deletePreregistrationData(uuid, email);
+        }
+        
+
+        //preregister dup check and delete older preregistration if exists
+        PreparedStatement pstmt_chkdup = this.con.prepareStatement("SELECT * FROM PREREGISTERED_USER WHERE EMAIL = ?");
+        ResultSet rs;
+        pstmt_chkdup.setString(1, email);
+        rs = pstmt_chkdup.executeQuery();
+
+        if(rs.isBeforeFirst()) {
+            rs.close();
+            deletePreregistrationData(uuid, email);
+        }
+
+        PreparedStatement pstmt_prereg = this.con.prepareStatement("INSERT INTO PREREGISTERED_USER VALUES(?, ?, ?, ?, ?)");
+
+        pstmt_prereg.setString(1, email);
+        pstmt_prereg.setString(2, uuid);
+        pstmt_prereg.setString(3, preregid);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expire = now.plusMinutes(15);//expire time
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String now_formatted = now.format(formatter);
+        String expire_formatted = expire.format(formatter);
+        pstmt_prereg.setString(4, now_formatted);
+        pstmt_prereg.setString(5, expire_formatted);
+        if(pstmt_prereg.executeUpdate() == 1)
+            ret = 1;
+        else
+            ret = -2;
+        this.disconnect();
+        return ret;
+    }
+
+    public int deleteUser(String uuid, String email) throws SQLException {
+        int ret = 0;
+        if(this.con.isClosed()) {
+            this.connect();
+        }
+
+        if(!isRegistered(uuid, email)) {
+            return -1;
+        }
+
+        PreparedStatement pstmt = this.con.prepareStatement("DELETE FROM REGISTERED_USER WHERE UUID = ? AND EMAIL = ?");
+        pstmt.setString(1, uuid);
+        pstmt.setString(2, email);
+        ret = pstmt.executeUpdate() == 1 ? 1 : -1;
+
+        this.disconnect();
+        return ret;
+
+    }
+
+    /**
+     * 指定されたユーザの仮登録情報を削除します。
+     * @param uuid ユーザのuuid。
+     * @param email ユーザのメールアドレス。
+     * @return boolean。削除に成功すればtrue、失敗すればfalse。
+     * @throws SQLException
+     */
+    private boolean deletePreregistrationData(String uuid, String email) throws SQLException {
+
+        PreparedStatement pstmt = this.con.prepareStatement("DELETE FROM PREREGISTERED_USER WHERE UUID = ? AND EMAIL = ?");
+        pstmt.setString(1, uuid);
+        pstmt.setString(2, email);
+
+        return pstmt.executeUpdate() >= 1;
+    }
+    /**
+     * 指定されたユーザがすでに登録されているかどうかを確認します。
+     * @param uuid ユーザのuuid。
+     * @param email ユーザのメールアドレス。
+     * @return boolean。すでに存在すればtrue、存在しなければfalse。
+     * @throws SQLException
+     */
+    private boolean isRegistered(String uuid, String email) throws SQLException {
         PreparedStatement pstmt_dupcheck = this.con.prepareStatement("SELECT UUID, EMAIL FROM REGISTERED_USER WHERE UUID = ? AND EMAIL = ?");
         ResultSet rs_dupcheck;
         pstmt_dupcheck.setString(1, uuid);
@@ -240,5 +335,61 @@ public final class MySQLConnection extends AccessConnection {
         rs_dupcheck = pstmt_dupcheck.executeQuery();
         return rs_dupcheck.isBeforeFirst();
     }
+
+    /**
+     * 指定されたユーザがすでに仮登録されているかどうかを確認します。
+     * @param uuid ユーザのuuid。
+     * @param email ユーザのメールアドレス。
+     * @return boolean。すでに存在すればtrue、存在しなければfalse。
+     * @throws SQLException
+     */
+    private boolean isPreRegistered(String uuid, String email) throws SQLException {
+        PreparedStatement pstmt = this.con.prepareStatement("SELECT UUID, EMAIL FROM PREREGISTERED_USER WHERE UUID = ? AND EMAIL = ?");
+        pstmt.setString(1, uuid);
+        pstmt.setString(2, email);
+        return pstmt.executeQuery().isBeforeFirst();
+    }
+
+    /**
+     * 指定されたpreregidの仮登録情報を返します。
+     * @param preregid 仮登録id。
+     * @return PreRegisteredUser インスタンス。存在しない場合はnull。
+     * @throws SQLException
+     */
+    private PreRegisteredUserData getPreregisteredUser(String preregid) throws SQLException {
+        PreparedStatement pstmt = this.con.prepareStatement("SELECT UUID, EMAIL FROM PREREGISTERED_USER WHERE PREREG_ID = ?");
+        ResultSet rs;
+        pstmt.setString(1, preregid);
+        rs = pstmt.executeQuery();
+        if(rs.next()) {
+            return new PreRegisteredUserData(rs.getString("UUID"), rs.getString("EMAIL"), preregid);
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * 指定されたpreregidの仮登録情報が有効であるかどうかを確認します。
+     * @param preregid
+     * @return boolean。仮登録情報は有効である場合はtrue。期限切れ、または存在しない場合はfalse。
+     * @throws SQLException
+     */
+
+    private boolean isPreRegisterValid(String preregid) throws SQLException {
+        PreparedStatement pstmt = this.con.prepareStatement("SELECT EXPIRE_AT FROM PREREGISTERED_USER WHERE PREREG_ID = ?");
+        ResultSet rs;
+        pstmt.setString(1, preregid);
+        rs = pstmt.executeQuery();
+        if(!rs.next()) {
+            return false;
+        }
+        else {
+            Timestamp expire_at = rs.getTimestamp("PREREG_ID");
+            Timestamp now =  new Timestamp(System.currentTimeMillis());
+
+            return !now.after(expire_at);
+        }
+    } 
 
 }
