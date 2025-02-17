@@ -14,10 +14,8 @@ public final class APIConnection extends AccessConnection {
     private OutputStream os = null;
     private InputStream is = null;
     private int port;
-    private String ipAddr;
-    public APIConnection(String ipAddr, int port) {
-        this.ipAddr = ipAddr;
-        this.port = port;
+    public APIConnection(int serverside_port) {
+        this.port = serverside_port;
     }
 
     @Override
@@ -108,7 +106,6 @@ public final class APIConnection extends AccessConnection {
         String inst = inst_tmp.toString();
 
         JSONObject inst_json = new JSONObject(inst);
-
         if(!inst_json.isNull("bye")) {
             JSONObject res_json = new JSONObject();
             res_json.put("bye", "pong");
@@ -131,15 +128,20 @@ public final class APIConnection extends AccessConnection {
             return new RegisterUser(null, null, preregid);
         }
         else if(inst_json.getString("method").equals("DELT")) {
-            String uuid = inst_json.getString("uuid");
+            String predelid = inst_json.getString("predelid");
+            return new DeleteUser(null, null, predelid);
+        }
+        else if(inst_json.getString("method").equals("PRDT")) {
             String email = inst_json.getString("email");
-            return new DeleteUser(uuid, email);
+            return new PreDeleteUser(null, email);
         }
 
         return null;
 
 
     }
+
+    /*
 
     public Instruction getInstruction_old() throws IOException {
 
@@ -202,6 +204,8 @@ public final class APIConnection extends AccessConnection {
 
         return null;
     }
+
+    */
 
     public boolean returnResult(AuthenticateResult ar) throws IOException {
 
@@ -269,11 +273,24 @@ public final class APIConnection extends AccessConnection {
         
         JSONObject res_json = new JSONObject();
         res_json.put("method", "DELT");
-        res_json.put("email", dr.getEmail());
-        res_json.put("uuid", dr.getUUID());
+        res_json.put("predelid", dr.getPredelid());
         res_json.put("status", dr.getResult());
         this.os.write(res_json.toString().getBytes());
         
+        return true;
+    }
+
+    public boolean returnResult(PreDeleteResult pr) throws IOException {
+        if(!(this.checkCon()) && this.checkStreams())
+            return false;
+        
+        JSONObject res_json = new JSONObject();
+        res_json.put("method", "PRDT");
+        res_json.put("email", pr.getEmail());
+        res_json.put("predelid", pr.getPredelid());
+        res_json.put("status", pr.getResult());
+        this.os.write(res_json.toString().getBytes());
+
         return true;
     }
 

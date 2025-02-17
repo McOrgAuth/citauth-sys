@@ -1,9 +1,11 @@
 package io.github.mam1zu.instruction.instructionresult;
 
-public class DeleteResult extends InstructionResult {
+public class PreDeleteResult extends InstructionResult {
+
     private String email;
     private String predelid;
-    public DeleteResult(String uuid, String email, String predelid, int result) {
+
+    public PreDeleteResult(String uuid, String email, int result, String predelid) {
         super(uuid, result);
         this.email = email;
         this.predelid = predelid;
@@ -16,4 +18,5 @@ public class DeleteResult extends InstructionResult {
     public String getPredelid() {
         return this.predelid;
     }
+
 }

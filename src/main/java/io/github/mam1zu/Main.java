@@ -8,6 +8,8 @@ import io.github.mam1zu.instruction.instructionresult.*;
 import io.github.mam1zu.utils.Config;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 
 public class Main {
@@ -15,7 +17,22 @@ public class Main {
 
         final boolean debug = true;
 
-        System.out.println("CITAUTH-PROCESS-SYSTEM");
+        System.out.println("");
+        System.out.println("---------------------------------------------------------------------------------------------------");
+        System.out.println("  #####    ######  ######## ######   ##   ##  ######## ### ###            #####   ##   ##   #####  ");
+        System.out.println(" ##   ##     ##    ## ## ##  ## ###   #   ##  ## ## ##  ## ##            ##   ##  ##   ##  ##   ## ");
+        System.out.println(" ##   ##     ##       ##     ##  ##  ##   ##     ##     ## ##            ##       ##   ##  ##      ");
+        System.out.println(" ##          ##       ##     ######  ##   ##     ##     #####    ######   #####    ######   #####  ");
+        System.out.println(" ##   ##     ##       ##     ##  ##  ##   ##     ##     #  ##                 ##       ##       ## ");
+        System.out.println(" ##   ##     ##       ##     ##  ##  ### ###     ##     ## ##            ##   ##  ##   ##  ##   ## ");
+        System.out.println("  #####    ######    ####   ###  ##   #####     ####   ### ###            #####    #####    #####  ");
+        System.out.println("---------------------------------------Under construction------------------------------------------");
+        System.out.println("");
+        System.out.println("Copyright (c) 2024-2025 mam1zu. All rights reserved.");
+        System.out.println("Developed by mam1zu(mam1zu.piyo@gmail.com)");
+        System.out.println("This system is under construction, please report if any problem occcurred.");
+
+        xmas_curse();
 
         loadConfig();
 
@@ -29,7 +46,7 @@ public class Main {
             }
             else {
                 if(!processInstruction()) {
-                    System.out.println("API server has said goodbye to process server.");
+                    System.out.println("API server has sent GOODBYE signal");
                     System.out.println("Disconnecting connections...");
                     disconnectAllConnections();
                     System.out.println("Done. Goodbye!");
@@ -47,12 +64,14 @@ public class Main {
 
     static void establishAPIConnection() {
         System.out.println("Waiting connection from API server...");
-        apicon = new APIConnection("172.24.241.112", 37565);
+        apicon = new APIConnection(37565);
         if(!apicon.connect()) {
             System.out.println("Connection to API failed");
             System.exit(-1);
         }
-        System.out.println("Connection to API established!");
+        else {
+            System.out.println("Connection to API established!");
+        }
     }
 
     static void checkMySQLConnection() {
@@ -95,6 +114,9 @@ public class Main {
                 apicon.returnResult((DeleteResult) instr);
                 return true;
             }
+            else if(instr instanceof PreDeleteResult) {
+                apicon.returnResult((PreDeleteResult) instr);
+            }
         } catch (IOException e){
             e.printStackTrace();
         }
@@ -107,4 +129,10 @@ public class Main {
         mysqlconfig = config.getMysqlConfig();
     }
 
+    static void xmas_curse() {
+        Calendar today = Calendar.getInstance();
+        if(today.MONTH == 12 && today.DAY_OF_MONTH == 25) {
+            System.out.println("Merry Christmas to you!");
+        }
+    }
 }
